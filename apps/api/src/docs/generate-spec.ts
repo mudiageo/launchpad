@@ -98,14 +98,14 @@ export async function generateCombinedSpec(): Promise<Record<string, unknown>> {
         in: 'cookie',
         name: 'better-auth.session_token',
         description: 'Session cookie set by better-auth after sign-in',
-      } as Record<string, unknown>,
+      },
     },
   }) as unknown as Record<string, unknown>;
 
   // ── 2. Fetch the better-auth spec ─────────────────────────────────────────
   let authSpec: BetterAuthOpenApiSpec = {};
   try {
-    const result: unknown = await (auth.api as Record<string, (args: Record<string, unknown>) => Promise<unknown>>)
+    const result: unknown = await (auth.api as any)
       .generateOpenAPISchema({});
     if (result && typeof result === 'object') {
       authSpec = result as BetterAuthOpenApiSpec;

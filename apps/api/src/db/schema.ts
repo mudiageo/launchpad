@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, integer, boolean, index, uniqueIndex } from 'drizzle-orm/pg-core';
 
 export * from './auth-schema'
+import { user } from './auth-schema'
 
 // App tables
 export const categories = pgTable('categories', {

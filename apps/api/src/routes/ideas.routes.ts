@@ -7,7 +7,7 @@ import { validate } from '../middleware/validate.middleware';
 import { CreateIdeaSchema, UpdateIdeaSchema, CreateCommentSchema } from '@launchpad/shared';
 import { randomUUID } from 'crypto';
 
-const router = Router();
+const router: Router = Router();
 
 // GET /ideas - List published ideas
 router.get('/', optionalAuth, async (req: Request, res: Response): Promise<void> => {
@@ -296,7 +296,7 @@ router.get('/:id', optionalAuth, async (req: Request, res: Response): Promise<vo
       .from(ideas)
       .leftJoin(categories, eq(ideas.categoryId, categories.id))
       .leftJoin(user, eq(ideas.authorId, user.id))
-      .where(eq(ideas.id, id));
+      .where(eq(ideas.id, id as string));
 
     if (!idea) {
       res.status(404).json({ success: false, error: 'Idea not found' });
@@ -308,7 +308,7 @@ router.get('/:id', optionalAuth, async (req: Request, res: Response): Promise<vo
       const vote = await db
         .select()
         .from(votes)
-        .where(and(eq(votes.ideaId, id), eq(votes.userId, currentUser.id)))
+        .where(and(eq(votes.ideaId, id as string), eq(votes.userId, currentUser.id)))
         .limit(1);
       hasVoted = vote.length > 0;
     }
@@ -326,7 +326,7 @@ router.put('/:id', requireAuth, validate(UpdateIdeaSchema), async (req: Request,
     const { id } = req.params;
     const currentUser = (req as any).user;
 
-    const [idea] = await db.select().from(ideas).where(eq(ideas.id, id)).limit(1);
+    const [idea] = await db.select().from(ideas).where(eq(ideas.id, id as string)).limit(1);
     if (!idea) {
       res.status(404).json({ success: false, error: 'Idea not found' });
       return;
@@ -340,7 +340,7 @@ router.put('/:id', requireAuth, validate(UpdateIdeaSchema), async (req: Request,
     await db
       .update(ideas)
       .set({ ...req.body, updatedAt: new Date() })
-      .where(eq(ideas.id, id));
+      .where(eq(ideas.id, id as string));
 
     const [updated] = await db
       .select({
@@ -365,7 +365,7 @@ router.put('/:id', requireAuth, validate(UpdateIdeaSchema), async (req: Request,
       })
       .from(ideas)
       .leftJoin(categories, eq(ideas.categoryId, categories.id))
-      .where(eq(ideas.id, id));
+      .where(eq(ideas.id, id as string));
 
     res.json({ success: true, data: updated });
   } catch (err) {
@@ -380,7 +380,7 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response): Promise<
     const { id } = req.params;
     const currentUser = (req as any).user;
 
-    const [idea] = await db.select().from(ideas).where(eq(ideas.id, id)).limit(1);
+    const [idea] = await db.select().from(ideas).where(eq(ideas.id, id as string)).limit(1);
     if (!idea) {
       res.status(404).json({ success: false, error: 'Idea not found' });
       return;
@@ -391,7 +391,7 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response): Promise<
       return;
     }
 
-    await db.delete(ideas).where(eq(ideas.id, id));
+    await db.delete(ideas).where(eq(ideas.id, id as string));
     res.json({ success: true, message: 'Idea deleted' });
   } catch (err) {
     console.error(err);
@@ -405,7 +405,7 @@ router.post('/:id/vote', requireAuth, async (req: Request, res: Response): Promi
     const { id } = req.params;
     const currentUser = (req as any).user;
 
-    const [idea] = await db.select().from(ideas).where(eq(ideas.id, id)).limit(1);
+    const [idea] = await db.select().from(ideas).where(eq(ideas.id, id as string)).limit(1);
     if (!idea) {
       res.status(404).json({ success: false, error: 'Idea not found' });
       return;
@@ -414,24 +414,24 @@ router.post('/:id/vote', requireAuth, async (req: Request, res: Response): Promi
     const existing = await db
       .select()
       .from(votes)
-      .where(and(eq(votes.ideaId, id), eq(votes.userId, currentUser.id)))
+      .where(and(eq(votes.ideaId, id as string), eq(votes.userId, currentUser.id)))
       .limit(1);
 
     if (existing.length > 0) {
       // Remove vote
-      await db.delete(votes).where(and(eq(votes.ideaId, id), eq(votes.userId, currentUser.id)));
+      await db.delete(votes).where(and(eq(votes.ideaId, id as string), eq(votes.userId, currentUser.id)));
       await db
         .update(ideas)
         .set({ voteCount: sql`${ideas.voteCount} - 1` })
-        .where(eq(ideas.id, id));
+        .where(eq(ideas.id, id as string));
       res.json({ success: true, data: { hasVoted: false, voteCount: idea.voteCount - 1 } });
     } else {
       // Add vote
-      await db.insert(votes).values({ id: randomUUID(), ideaId: id, userId: currentUser.id });
+      await db.insert(votes).values({ id: randomUUID(), ideaId: id as string, userId: currentUser.id });
       await db
         .update(ideas)
         .set({ voteCount: sql`${ideas.voteCount} + 1` })
-        .where(eq(ideas.id, id));
+        .where(eq(ideas.id, id as string));
       res.json({ success: true, data: { hasVoted: true, voteCount: idea.voteCount + 1 } });
     }
   } catch (err) {
@@ -461,7 +461,7 @@ router.get('/:id/comments', async (req: Request, res: Response): Promise<void> =
       })
       .from(comments)
       .leftJoin(user, eq(comments.authorId, user.id))
-      .where(eq(comments.ideaId, id))
+      .where(eq(comments.ideaId, id as string))
       .orderBy(asc(comments.createdAt));
 
     res.json({ success: true, data: rows });
@@ -478,7 +478,7 @@ router.post('/:id/comments', requireAuth, validate(CreateCommentSchema), async (
     const currentUser = (req as any).user;
     const { content } = req.body;
 
-    const [idea] = await db.select().from(ideas).where(eq(ideas.id, id)).limit(1);
+    const [idea] = await db.select().from(ideas).where(eq(ideas.id, id as string)).limit(1);
     if (!idea) {
       res.status(404).json({ success: false, error: 'Idea not found' });
       return;
@@ -488,14 +488,14 @@ router.post('/:id/comments', requireAuth, validate(CreateCommentSchema), async (
     await db.insert(comments).values({
       id: commentId,
       content,
-      ideaId: id,
+      ideaId: id as string,
       authorId: currentUser.id,
     });
 
     await db
       .update(ideas)
       .set({ commentCount: sql`${ideas.commentCount} + 1` })
-      .where(eq(ideas.id, id));
+      .where(eq(ideas.id, id as string));
 
     const [comment] = await db
       .select({

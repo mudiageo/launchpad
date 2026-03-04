@@ -11,7 +11,7 @@ import { auth } from './auth';
 import apiRouter from './routes';
 import { errorHandler } from './middleware/error.middleware';
 
-const app = express();
+const app: express.Express = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(helmet());

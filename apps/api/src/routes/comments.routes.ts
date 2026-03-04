@@ -4,14 +4,14 @@ import { comments, ideas } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { requireAuth } from '../middleware/auth.middleware';
 
-const router = Router();
+const router: Router = Router();
 
 router.delete('/:id', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     const currentUser = (req as any).user;
 
-    const comment = await db.select().from(comments).where(eq(comments.id, id)).limit(1);
+    const comment = await db.select().from(comments).where(eq(comments.id, id as string)).limit(1);
     if (!comment.length) {
       res.status(404).json({ success: false, error: 'Comment not found' });
       return;
@@ -22,7 +22,7 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response): Promise<
       return;
     }
 
-    await db.delete(comments).where(eq(comments.id, id));
+    await db.delete(comments).where(eq(comments.id, id as string));
 
     // Decrement comment count
     await db

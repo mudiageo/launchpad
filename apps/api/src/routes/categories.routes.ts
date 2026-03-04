@@ -3,7 +3,7 @@ import { db } from '../db';
 import { categories, ideas } from '../db/schema';
 import { eq, sql } from 'drizzle-orm';
 
-const router = Router();
+const router: Router = Router();
 
 router.get('/', async (_req: Request, res: Response): Promise<void> => {
   try {
@@ -41,7 +41,7 @@ router.get('/:slug', async (req: Request, res: Response): Promise<void> => {
       })
       .from(categories)
       .leftJoin(ideas, eq(ideas.categoryId, categories.id))
-      .where(eq(categories.slug, slug))
+      .where(eq(categories.slug, slug as string))
       .groupBy(categories.id);
 
     if (!result.length) {
